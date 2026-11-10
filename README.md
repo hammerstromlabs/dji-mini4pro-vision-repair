@@ -22,45 +22,50 @@ After replacing a Mini 4 Pro's upper vision module, DJI Fly can show:
 DJI Fly's calibrate option is restricted to authorised technicians, and DJI Assistant 2 does not
 officially offer vision calibration for this aircraft.
 
-## What is established (tested on one aircraft)
+## Observed so far (one aircraft, one software build)
 
-1. **Calibration is stored on the main (core) board, not on the sensor module.** Files are kept per
-   stereo pair: `cali_ab` (downward), `cali_cd`, `cali_de`, `cali_ef`, `cali_fc` (the four fisheye
-   cameras), plus per-camera lens-shading files named by each camera's serial number.
-2. **DJI Assistant 2 2.1.42 already ships a full PC-side vision calibrator that supports the Mini 4 Pro.**
-   It is hidden by one switch in a settings file (`vision_enable`). Enabling it let me calibrate the
-   **downward** pair with a monitor and push the result to the drone: RMS reprojection error 0.168 px,
-   baseline 37.91 mm versus a nominal 38.0 mm.
-3. The calibrator also contains a forward-pair path (`raw/front/*` → `cali_cd.txt`), but it is
-   configured for a different DJI model. A 5-byte patch retargets the Mini 4 Pro's pair at the forward
-   cameras. That patched build is for **capturing frames only**; see the limitation in
-   [docs/03-procedures.md](docs/03-procedures.md).
-4. With that patch the forward cameras stream **1024×1152, 8-bit grayscale fisheye**. On my replacement
-   module the right camera produced a clean image and the **left camera produced pure noise** (valid
-   frame headers, no image). That, and not a serial-number mismatch, is the most likely cause of the
-   forward-calibration error on that unit. See [examples/](examples/).
+Each item says how it was learned. Nothing here has been independently reproduced yet.
 
-## Status and what is left
+1. **Where calibration lives (inferred).** Encrypted log exports have plaintext file names showing
+   per-pair calibration files (`cali_ab`, `cali_cd`, `cali_de`, `cali_ef`, `cali_fc`) and per-camera
+   lens-shading files named by serial number, held on the core board's perception processor. The file
+   *contents* are encrypted, so this is inferred from names only.
+2. **A hidden calibrator exists (from reading the install).** DJI Assistant 2 (Consumer Drones Series)
+   2.1.42 contains a vision calibrator DLL with a Mini 4 Pro (`wa140`) entry, switched off by
+   `vision_enable=0` in `defaultsettings.ini`. Setting it to `1` exposes it.
+3. **Downward pair: calibrated and pushed (tested).** With the calibrator enabled, the downward pair
+   calibrated with a monitor and the result was pushed to the drone: RMS reprojection error 0.168 px,
+   baseline 37.91 mm against a nominal 38.0 mm. This documents the calibration result only; it does not
+   include a flight test of the outcome.
+4. **Forward cameras can be streamed by retargeting the calibrator (tested).** A 5-byte patch points the
+   Mini 4 Pro entry at `raw/front/*`. The frames recorded were **1024x1152, 8-bit grayscale,
+   fisheye-distorted**.
+5. **On the replacement module tested, one forward channel produced no image (recorded).** The right
+   camera produced a clean image; the left produced uniform noise with valid-looking frame headers
+   (statistics in [docs/01](docs/01-diagnosis.md), sample in [examples/](examples/)). The cause is **not
+   yet confirmed**: a hardware fault in that camera or its flex is the leading suspect, but no light test
+   or module swap has been done. A serial-number mismatch looks less likely because the right camera on the
+   same module worked.
 
-- **Cameras:** in the author's testing the vision cameras could be brought up through Assistant 2's
-  calibrator. The one failure, a front-left camera that outputs noise, was traced to the **replacement
-  camera module, not to Assistant 2 or this method.** Documented evidence in this repo covers the downward
-  pair (`raw/down/*`) and forward pair (`raw/front/*`) only; topic names and captures for the side and rear
-  cameras are not written up yet (contributions welcome).
-- **Forward, side and rear calibration have not been completed end to end.** The calibrator's defaults
-  are for a 640×480 pinhole pair, so those pairs still need a fisheye intrinsic model, the 1024×1152
-  image size (forward pair), correct nominal focal/baseline values, and the `cali_cd.txt` format the drone
-  expects (unknown; on-board files are encrypted in log exports). A working forward run also needs a
-  healthy camera pair.
-- The findings come from a single aircraft and a single Assistant 2 build (2.1.42, calibrator DLL
-  v2.5.0.7). Other builds will have different addresses; the patch script refuses to run on them.
+## Ongoing / not yet discovered
 
-## Why this may help beyond one drone
+- **Forward-pair calibration** has not been attempted end to end. It likely needs a fisheye intrinsic
+  model, the 1024x1152 image size, correct nominal focal length and baseline, and the `cali_cd.txt` format
+  the drone expects (unknown; on-board files are encrypted in log exports). It also needs a working camera
+  pair.
+- **Side and rear pairs** (`cali_de`, `cali_ef`, `cali_fc`): not investigated. Their image topic names are
+  unknown and no frames have been captured.
+- **Whether the drone accepts** a self-generated forward calibration is unknown.
+- **Other Assistant 2 builds and other drones** have not been checked. The patch script refuses to run on
+  any DLL other than the one it was written for.
+
+## Why this might help beyond one drone
 
 The calibrator is table-driven: [docs/02](docs/02-how-da2-calibration-works.md) documents the per-model
 table inside the DLL (image topic, image size, nominal focal length, baseline, intrinsic model, output
-file) and the result-file format. Adding or retargeting a camera pair means changing those entries. If
-you have a different drone or camera module, that is the starting point.
+file) and the result-file format. Retargeting the pair for the Mini 4 Pro's forward cameras worked at the
+level of streaming frames; whether a different drone or camera module can be added this way is an open
+question, not a result.
 
 ## Contents
 
@@ -77,7 +82,8 @@ you have a different drone or camera module, that is the starting point.
 ## Contributing
 
 Results from other aircraft, Assistant 2 versions or camera modules are very welcome, especially: working
-forward-pair parameters, the `cali_cd.txt` format, and side/rear topic names. Please **do not** attach DJI
+forward-pair parameters, the `cali_cd.txt` format, and side/rear topic names. Please say how you
+verified each claim (log, capture, command). Please **do not** attach DJI
 binaries, firmware, encrypted log exports, your drone's calibration files, or camera frames showing your
 surroundings. Redact serial numbers.
 

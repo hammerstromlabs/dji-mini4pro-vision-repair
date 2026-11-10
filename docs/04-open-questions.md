@@ -10,18 +10,18 @@ from the camera units at boot.
 `save to eeprom error ret_code= 224` at startup, which suggests DJI's tooling expects some writable
 storage in the vision chain. This project does not attempt to read or change camera serials.
 
-**Do they have to "match"? Evidence so far says SN mismatch is *not* what's blocking the drone:**
+**Do they have to "match"? Unknown. Circumstantial evidence suggests SN mismatch is not what's blocking the drone, but this is not proven:**
 
-- A replacement module's **right** forward camera streams a perfect image, so the drone accepts and
-  runs a camera whose SN it has never seen.
-- Only the **forward** pair is flagged (`1A510381`). If every new SN were rejected, any other camera
-  on the replacement module would be flagged too.
-- The flagged pair is exactly the one whose left camera outputs pure noise.
+- A replacement module's **right** forward camera streams a perfect image, so the drone appears to run a
+  camera it has not seen before (assumes its SN differs; the SNs were not compared).
+- Only the **forward** pair is flagged (`1A510381`). If every new SN were rejected, other cameras on the
+  replacement module might be flagged too (reasoning, not tested).
+- The flagged pair is the one containing the camera that outputs noise.
 
-**Why changing the SN is the wrong fix anyway:** the core board's `cali_*.txt` files belong to the
+**Why changing the SN would probably be the wrong fix (reasoning, untested):** the core board's `cali_*.txt` files belong to the
 *old* cameras. Making new cameras report old serials would make the drone apply the old lenses'
-geometry to new lenses. Distance estimates would be silently wrong. The right fix is new calibration
-for the new cameras, which we now know DA2 can produce and push.
+geometry to new lenses. Distance estimates would be silently wrong. The better approach is new calibration
+for the new cameras. DA2 has produced and pushed one for the downward pair only.
 
 **How to check (later):** read the per-camera SNs over DUML (`0x00/0x51 Get SN`, read-only) or from a
 fresh log export, and compare them with the lens-shading file names.
@@ -47,8 +47,8 @@ write a `cali_cd.txt` in the right format and push it.
 | Pair | Status |
 |---|---|
 | `ab` downward | ✅ Calibrated via DA2 and pushed |
-| `cd` forward | Cameras stream via the patched calibrator; calibration blocked on the unit tested by a faulty front-left camera module (noise), not by Assistant 2 |
-| `de`, `ef`, `fc` (sides/rear) | Author reports all cameras could be activated in testing, but topic names and captures are not documented here yet. Contributions welcome |
+| `cd` forward | In progress. Frames captured via the patched calibrator (right clean, left noise). Calibration not attempted; cause of the left-camera noise not yet confirmed |
+| `de`, `ef`, `fc` (sides/rear) | Not yet investigated. No topic names or captures. Contributions welcome |
 
 ## Next actions
 

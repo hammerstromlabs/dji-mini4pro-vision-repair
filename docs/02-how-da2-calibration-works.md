@@ -17,8 +17,8 @@ The Mini 4 Pro enumerates as `VID_2CA3 & PID_0020` (it also enumerates while pow
 
 DA2 installs a libusb-win32 driver for MI_03–07. Without it there is no COM port and no access.
 
-Plugging the drone into a PC puts it in USB mode: it won't link to the remote. On the bench it overheats
-within minutes (it relies on prop airflow), so keep a fan blowing on it.
+Plugging the drone into a PC puts it in USB mode: it won't link to the remote. The author found it got hot
+on the bench (unmeasured) and used a fan; treat that as a precaution, not a characterised limit.
 
 ## The components
 
@@ -102,18 +102,9 @@ Create these files in `DJIEngine\`:
 - DUML general command set: `0x00/0x51` Get Serial Number (documented by the o-gs/dji-firmware-tools
   dissectors). Read-only; not yet tested on this aircraft.
 
-## Adapting the calibrator to another camera pair (untested outline)
+## Open: adapting the calibrator to another camera pair
 
-The per-model table above is where a new pair would be described. For a different drone or camera
-module you would need, per pair:
-
-1. The two ss_dbus image topics (find them in the calibrator log, or with the recording mode in
-   [03-procedures.md](03-procedures.md) §D).
-2. Image width/height as actually streamed (check the PNGs from a recording).
-3. Nominal focal length (pixels) and baseline (mm) as seeds for the solver.
-4. The intrinsic model matching the lens: `Pinhole_opencv` for narrow lenses; `Equidistant` or
-   `Ftheta_opencv` for fisheye.
-5. The output filename the drone loads (`cali_ab` ... `cali_fc`).
-
-Only the Mini 4 Pro's downward pair is proven. Everything else is hypothesis until someone completes a
-forward-pair run and confirms the drone accepts the result.
+Not attempted. The per-model table above suggests the inputs a pair needs: image topics, image size,
+nominal focal length, baseline, intrinsic model and output filename. Which of these the drone's perception
+stack requires, and whether it will accept the result for a pair other than the downward one, is unknown.
+Only the Mini 4 Pro's downward pair has been calibrated and pushed.
