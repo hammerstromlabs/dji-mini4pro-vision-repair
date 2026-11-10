@@ -1,0 +1,9 @@
+# Never commit vendor binaries, device exports, or captures
+*.dll
+*.exe
+*.asar
+*.DAT
+*.enc
+__pycache__/
+private/
+record/
