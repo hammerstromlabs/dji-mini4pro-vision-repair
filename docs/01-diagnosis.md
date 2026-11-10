@@ -40,13 +40,18 @@ from each forward camera (`raw/front/left`, `raw/front/right`).
 
 | Metric | Front-right | Front-left |
 |---|---|---|
-| Image | Clean 1024×1152 fisheye view of the room | Uniform "TV static" |
-| Brightness range across 10×16 blocks | 8.8 – 158.0 | 142.1 – 146.0 (flat) |
-| Adjacent-pixel correlation (H / V) | +0.96 / +0.98 | −0.005 / +0.006 |
-| Spatial correlation in any single bit plane | 0.06 – 0.93 | ~0.00 in all 8 bits |
-| Header row (frame counter / timestamp) | Present | Present, appears in sync with right |
+| Image | Clean 1024×1152 fisheye view of a room | Uniform "TV static" |
+| Mean brightness over 64×64 blocks, frame 30 | 8.8 – 207.5 | 78.3 – 84.8 |
+| Adjacent-pixel correlation (H / V), frame 29 | +0.96 / +0.98 | −0.005 / +0.006 |
+| Horizontal neighbour correlation per bit plane, frame 30 | 0.07 – 0.89 | 0.00 – 0.01 (all 8 bits) |
+| First bytes of row 0 | Header-like bytes on some frames (e.g. 7614, 7639) | Header-like bytes on the frames sampled (e.g. 7610, 7630, 7635) |
 
-What the data shows: the left channel delivers frames with a plausible metadata header, but the pixel
+The "header-like bytes" are a little-endian number in the first two bytes of row 0 that increases from
+frame to frame and is close in value between the two cameras. Reading it as a frame counter is a guess,
+and not every frame was checked (right-camera frame 1 has no such header). Figures reproduced with
+[`tools/noise_stats.py`](../tools/noise_stats.py) and an ad-hoc script on 58 recorded frames per camera.
+
+What the data shows: the left channel delivers frames with a header-like prefix, but the pixel
 payload is statistically indistinguishable from random noise (no spatial correlation in any bit plane),
 so a different decoding of the same bytes is unlikely to recover an image.
 

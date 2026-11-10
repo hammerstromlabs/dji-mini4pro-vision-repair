@@ -1,9 +1,10 @@
 # 02 — How DJI Assistant 2's vision calibration works
 
-All findings are from **DJI Assistant 2 (Consumer Drones Series) 2.1.42** (Windows, released 2026-09-22),
-installed at `C:\Program Files (x86)\DJI Product\DJI Assistant 2 (Consumer Drones Series)\`.
+All findings are from **DJI Assistant 2 (Consumer Drones Series) V2.1.42** (Windows), installed at `C:\Program Files (x86)\DJI Product\DJI Assistant 2 (Consumer Drones Series)\`.
 
 ## USB interfaces of the drone
+
+*From live USB enumeration during the author's session. These were not preserved in this repository's logs and have not been re-checked since; treat them as unverified.*
 
 The Mini 4 Pro enumerates as `VID_2CA3 & PID_0020` (it also enumerates while powered off, on USB power alone).
 
@@ -24,12 +25,12 @@ on the bench (unmeasured) and used a fan; treat that as a precaution, not a char
 
 | File (under `DJIEngine\`) | Role |
 |---|---|
-| `defaultsettings.ini` | Per-model feature switches. `[wa140] vision_enable=0` hides calibration for the Mini 4 Pro |
+| `defaultsettings.ini` | Per-model feature switches. Stock `[wa140] vision_enable=0`; the UI reads this into a `visionEnable` setting. What it gates for the Mini 4 Pro is unverified |
 | `DJIVisionCalibration3.dll` (v2.5.0.7, built 2024-09-05) | The calibrator: image capture, pattern detection, Ceres solver, result file |
 | `dbus_pc.json` | Transport/topology config. `wa140` uses the `dual_chip_a7` profile |
 | `DJIServices\DJIUavService.dll` | Pushes result files to the drone (`transfer_calibrate_result_file`); knows `/cali_ab.txt` … `/cali_kl.txt` |
 | `config.ini` | Calibrator settings. `recordSetting.mode`: 0 off, 1 record, 2 replay |
-| `DJIApp\app.asar` | Electron UI. **Integrity-checked** via `HASH.FILES`/`HASH.SIG`; DLLs and INIs are not |
+| `DJIApp\app.asar` | Electron UI. `HASH.FILES` and `HASH.SIG` files sit beside it, so an integrity check is likely (not tested; the asar was never modified). Editing the DLL and INI did not stop Assistant 2 from running |
 
 ## Calibration flow
 
@@ -45,22 +46,27 @@ on the bench (unmeasured) and used a fan; treat that as a precaution, not a char
 4. On `vision_calibration_calculation_ok`, the UI calls `transfer_calibrate_result_file`, which pushes
    the result file to the drone. DA2 then asks you to **restart the aircraft**.
 
-For the Mini 4 Pro the UI hard-codes `cameraIndex = 0`, a 2-step flow.
+For the Mini 4 Pro (`wa140`) the UI code sets `cameraIndex = 0`, `count = 1`, `step = 3` (a single pair, the downward one) and calls `transfer_calibrate_result_file` on success.
 
 ## Per-model configuration inside `DJIVisionCalibration3.dll`
 
 The function at VA `0x10089500`–`0x1008a3b0` builds a camera-pair list per model by string-comparing
 the device name. Relevant fields:
 
-| Model | Pairs | Topic | Size | Nominal focal | Nominal baseline | Model | Output |
+| Model | Pairs | Topic | Size | Nominal focal* | Nominal baseline | Model | Output |
 |---|---|---|---|---|---|---|---|
-| `wm169` | 1 | `raw/down/*` | 640×480 | — | 40 mm | Opencv | `cali_ab.txt` |
-| `ag701` pair 1 | 2 | `raw/down/*` | — | — | 130 mm | Opencv | `cali_ab.txt` |
+| `wm169` | 1 | `raw/down/*` | not set here | 240 | 40 mm | Opencv | `cali_ab.txt` |
+| `ag701` pair 1 | 2 | `raw/down/*` | not set here | 475 | 130 mm | Opencv | `cali_ab.txt` |
 | `ag701` pair 2 | | **`raw/front/*`** | **1280×960** | 475 | 130 mm | Opencv | **`cali_cd.txt`** |
-| `wa233` | 1 | `raw/down/*` | — | — | 60 mm | Opencv | `cali_ab.txt` |
+| `wa233` | 1 | `raw/down/*` | not set here | 245 | 60 mm | Opencv | `cali_ab.txt` |
 | **`wa140`** | 1 | `raw/down/*` | 640×480 | 245 | **38 mm** | Opencv | `cali_ab.txt` |
-| `wa234` | 1 | `visp/down/*` | — | — | 60.5 mm | Opencv | `cali_ab.txt` |
-| `wa150` | 1 | `visp/down/*` | — | — | 36 mm | Opencv | `cali_ab.txt` |
+| `wa234` | 1 | `visp/down/*` | not set here | 435 | 60.5 mm | Opencv | `cali_ab.txt` |
+| `wa150` | 1 | `visp/down/*` | not set here | 435 | 36 mm | Opencv | `cali_ab.txt` |
+
+\* The first integer field of each entry, which the author interprets as the nominal focal length in
+pixels (an interpretation, not confirmed). All rows were re-read from the disassembly of the
+v2.5.0.7 DLL (sha1 `ddbcbdd0...e4`). "Not set here" means the entry does not store a size in the code that
+builds it; a default elsewhere may apply.
 
 Camera models compiled into the DLL: `Equidistant`, `Pinhole`, `Pinhole_opencv`, `Pinhole_opencvext`,
 `Pinhole_opencvk4`, `Ftheta_opencv`. The fisheye-capable ones (`Equidistant`, `Ftheta_opencv`) exist

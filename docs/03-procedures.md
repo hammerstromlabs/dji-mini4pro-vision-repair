@@ -4,7 +4,12 @@ All paths below are relative to
 `C:\Program Files (x86)\DJI Product\DJI Assistant 2 (Consumer Drones Series)\DJIEngine\`.
 Close DJI Assistant 2 completely before changing any file.
 
-## A. Enable the hidden vision calibration (downward pair) — tested, works
+## A. Calibrate the downward pair — tested, works
+
+> **Check first whether you need the settings edit.** The stock `defaultsettings.ini` has `[wa140]
+> vision_enable=0`, and the author reports Assistant 2 already offers the lower-assembly calibration by
+> default. It is **not verified** whether the downward calibration appears without the edit. Try the stock
+> install first; only apply step 2 if the option is missing.
 
 1. Install DJI Assistant 2 (Consumer Drones Series) 2.1.42 and sign in.
 2. In `defaultsettings.ini`, change

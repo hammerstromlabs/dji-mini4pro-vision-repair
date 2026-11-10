@@ -19,8 +19,9 @@ After replacing a Mini 4 Pro's upper vision module, DJI Fly can show:
 | `1A510381` | Forward vision sensor calibration error. Auto calibration in progress... |
 | `16200202` | Vision sensors calibration error. Unable to take off. Restart aircraft... |
 
-DJI Fly's calibrate option is restricted to authorised technicians, and DJI Assistant 2 does not
-officially offer vision calibration for this aircraft.
+Per the author, DJI Fly's calibrate option refused to run (reported as requiring an authorised technician;
+not independently verified). Per the author, DJI Assistant 2 offers vision calibration for this aircraft for
+the **lower (downward) assembly only**, as its default and only option.
 
 ## Observed so far (one aircraft, one software build)
 
@@ -30,10 +31,13 @@ Each item says how it was learned. Nothing here has been independently reproduce
    per-pair calibration files (`cali_ab`, `cali_cd`, `cali_de`, `cali_ef`, `cali_fc`) and per-camera
    lens-shading files named by serial number, held on the core board's perception processor. The file
    *contents* are encrypted, so this is inferred from names only.
-2. **A hidden calibrator exists (from reading the install).** DJI Assistant 2 (Consumer Drones Series)
-   2.1.42 contains a vision calibrator DLL with a Mini 4 Pro (`wa140`) entry, switched off by
-   `vision_enable=0` in `defaultsettings.ini`. Setting it to `1` exposes it.
-3. **Downward pair: calibrated and pushed (tested).** With the calibrator enabled, the downward pair
+2. **Assistant 2's calibrator is single-pair for this aircraft (read from the install).** DJI Assistant 2
+   (Consumer Drones Series) V2.1.42 contains a vision calibrator DLL with a Mini 4 Pro (`wa140`) entry for
+   one pair, the downward pair (`raw/down/*` writing `cali_ab.txt`), and its UI code forces the single-pair
+   flow for `wa140` (`cameraIndex=0, count=1`). The stock `defaultsettings.ini` has `[wa140]
+   vision_enable=0`; **what that flag gates is not verified** (see Ongoing).
+3. **Downward pair: calibrated and pushed (tested).** Using Assistant 2's calibrator (with
+   `vision_enable=1` set at the time), the downward pair
    calibrated with a monitor and the result was pushed to the drone: RMS reprojection error 0.168 px,
    baseline 37.91 mm against a nominal 38.0 mm. This documents the calibration result only; it does not
    include a flight test of the outcome.
@@ -55,6 +59,10 @@ Each item says how it was learned. Nothing here has been independently reproduce
   pair.
 - **Side and rear pairs** (`cali_de`, `cali_ef`, `cali_fc`): not investigated. Their image topic names are
   unknown and no frames have been captured.
+- **What `vision_enable` does for the Mini 4 Pro.** The stock value is `0` and the UI reads it into a
+  `visionEnable` setting, but it has not been tested whether the downward calibration appears with the
+  stock value. The author reports the lower-assembly calibration is available by default, which would make
+  the edit unnecessary.
 - **Whether the drone accepts** a self-generated forward calibration is unknown.
 - **Other Assistant 2 builds and other drones** have not been checked. The patch script refuses to run on
   any DLL other than the one it was written for.
@@ -73,7 +81,7 @@ question, not a result.
 |---|---|
 | [docs/01-diagnosis.md](docs/01-diagnosis.md) | Error codes, on-board file layout, and the left-camera noise test |
 | [docs/02-how-da2-calibration-works.md](docs/02-how-da2-calibration-works.md) | USB interfaces, calibrator flow, per-model config table, result format, debug switches |
-| [docs/03-procedures.md](docs/03-procedures.md) | Enable the hidden calibration, patch, safety switches, record frames, **revert to stock** |
+| [docs/03-procedures.md](docs/03-procedures.md) | Downward calibration, forward-capture patch, safety switches, record frames, **revert to stock** |
 | [docs/04-open-questions.md](docs/04-open-questions.md) | Camera serials, forward fisheye calibration, next steps |
 | [tools/](tools/) | Python scripts for the analysis and the byte patch |
 | [examples/](examples/) | One sample frame showing what a "noise" camera channel looks like |
