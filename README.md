@@ -45,7 +45,7 @@ Each item says how it was learned. Nothing here has been independently reproduce
    Mini 4 Pro entry at `raw/front/*`. The frames recorded were **1024x1152, 8-bit grayscale,
    fisheye-distorted**.
 5. **On the replacement module tested, one forward channel produced no image (recorded).** The right
-   camera produced a clean image; the left produced uniform noise with valid-looking frame headers
+   camera produced a clean image; the left produced uniform noise (with header-like bytes at the start of some frames)
    (statistics in [docs/01](docs/01-diagnosis.md), sample in [examples/](examples/)). The cause is **not
    yet confirmed**: a hardware fault in that camera or its flex is the leading suspect, but no light test
    or module swap has been done. A serial-number mismatch looks less likely because the right camera on the
