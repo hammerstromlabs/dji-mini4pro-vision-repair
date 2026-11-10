@@ -47,8 +47,8 @@ write a `cali_cd.txt` in the right format and push it.
 | Pair | Status |
 |---|---|
 | `ab` downward | ✅ Calibrated via DA2 and pushed |
-| `cd` forward | ⛔ Blocked by front-left camera hardware (noise) |
-| `de`, `ef`, `fc` (sides/rear) | Not yet investigated. Topic names are unknown (try `raw/back/*`, `raw/left/*`, `raw/right/*`) |
+| `cd` forward | Cameras stream via the patched calibrator; calibration blocked on the unit tested by a faulty front-left camera module (noise), not by Assistant 2 |
+| `de`, `ef`, `fc` (sides/rear) | Author reports all cameras could be activated in testing, but topic names and captures are not documented here yet. Contributions welcome |
 
 ## Next actions
 

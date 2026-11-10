@@ -40,11 +40,18 @@ officially offer vision calibration for this aircraft.
    frame headers, no image). That, and not a serial-number mismatch, is the most likely cause of the
    forward-calibration error on that unit. See [examples/](examples/).
 
-## What is NOT done
+## Status and what is left
 
-- **Forward (and side/rear) pair calibration does not work yet.** It needs a fisheye intrinsic model,
-  the 1024×1152 image size, correct nominal focal/baseline values, and the `cali_cd.txt` format the
-  drone expects (unknown; on-board files are encrypted in log exports).
+- **Cameras:** in the author's testing the vision cameras could be brought up through Assistant 2's
+  calibrator. The one failure, a front-left camera that outputs noise, was traced to the **replacement
+  camera module, not to Assistant 2 or this method.** Documented evidence in this repo covers the downward
+  pair (`raw/down/*`) and forward pair (`raw/front/*`) only; topic names and captures for the side and rear
+  cameras are not written up yet (contributions welcome).
+- **Forward, side and rear calibration have not been completed end to end.** The calibrator's defaults
+  are for a 640×480 pinhole pair, so those pairs still need a fisheye intrinsic model, the 1024×1152
+  image size (forward pair), correct nominal focal/baseline values, and the `cali_cd.txt` format the drone
+  expects (unknown; on-board files are encrypted in log exports). A working forward run also needs a
+  healthy camera pair.
 - The findings come from a single aircraft and a single Assistant 2 build (2.1.42, calibrator DLL
   v2.5.0.7). Other builds will have different addresses; the patch script refuses to run on them.
 
